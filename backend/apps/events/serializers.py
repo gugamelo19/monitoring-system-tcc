@@ -3,11 +3,14 @@ from .models import NetworkEvent
 
 
 class NetworkEventSerializer(serializers.ModelSerializer):
+    asset_name = serializers.CharField(source="asset.name", read_only=True)
+
     class Meta:
         model = NetworkEvent
         fields = [
             "id",
             "asset",
+            "asset_name",
             "source_ip",
             "destination_ip",
             "source_port",
