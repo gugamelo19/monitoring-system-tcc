@@ -36,3 +36,15 @@ export async function loginRequest(username: string, password: string) {
     body: JSON.stringify({ username, password }),
   });
 }
+
+export async function updateAlertStatus(
+  alertId: string,
+  status: string,
+  token: string,
+) {
+  return apiFetch(`/api/alerts/${alertId}/`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({ status }),
+  });
+}
