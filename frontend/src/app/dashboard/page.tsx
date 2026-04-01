@@ -100,6 +100,13 @@ export default function DashboardPage() {
 
           <div className="flex items-center gap-3">
             <Link
+              href="/dashboard/events"
+              className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-white transition hover:bg-slate-900"
+            >
+              Ver eventos
+            </Link>
+
+            <Link
               href="/dashboard/alerts"
               className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-white transition hover:bg-slate-900"
             >

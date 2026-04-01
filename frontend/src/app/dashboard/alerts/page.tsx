@@ -1,7 +1,8 @@
+
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { apiFetch, updateAlertStatus } from "@/lib/api";
@@ -40,9 +41,13 @@ function getStatusBadge(status: string) {
 
 export default function AlertsPage() {
   const router = useRouter();
+
   const [alerts, setAlerts] = useState<RecentAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingAlertId, setUpdatingAlertId] = useState<string | null>(null);
+
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [severityFilter, setSeverityFilter] = useState("ALL");
 
   const fetchAlerts = useCallback(async () => {
     const token = getAccessToken();
@@ -53,10 +58,10 @@ export default function AlertsPage() {
     }
 
     try {
-      const data = await apiFetch<RecentAlert[]>("alpi/alerts/", {  token });
+      const data = await apiFetch<RecentAlert[]>("/api/alerts/", { token });
       setAlerts(data);
     } catch (error) {
-      console.error("Error ao carregar alertas: ", error)
+      console.error("Erro ao carregar alertas:", error);
       clearAuthTokens();
       router.push("/login");
     } finally {
@@ -80,14 +85,34 @@ export default function AlertsPage() {
       setUpdatingAlertId(alertId);
       await updateAlertStatus(alertId, status, token);
 
-      await fetchAlerts();
-
+      setAlerts((currentAlerts) =>
+        currentAlerts.map((alert) =>
+          alert.id === alertId ? { ...alert, status } : alert
+        )
+      );
     } catch (error) {
       console.error("Erro ao atualizar status do alerta:", error);
-      alert("Não foi possível atualizar o status do alerta.");
+      window.alert("Não foi possível atualizar o status do alerta.");
     } finally {
       setUpdatingAlertId(null);
     }
+  }
+
+  const filteredAlerts = useMemo(() => {
+    return alerts.filter((alert) => {
+      const matchesStatus =
+        statusFilter === "ALL" || alert.status === statusFilter;
+
+      const matchesSeverity =
+        severityFilter === "ALL" || alert.severity === severityFilter;
+
+      return matchesStatus && matchesSeverity;
+    });
+  }, [alerts, statusFilter, severityFilter]);
+
+  function clearFilters() {
+    setStatusFilter("ALL");
+    setSeverityFilter("ALL");
   }
 
   return (
@@ -121,13 +146,75 @@ export default function AlertsPage() {
           </div>
         </header>
 
+        <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Filtros</h2>
+              <p className="text-sm text-slate-400">
+                Refine a visualização dos alertas por status e severidade
+              </p>
+            </div>
+
+            <div className="text-sm text-slate-300">
+              Exibindo{" "}
+              <span className="font-semibold text-white">
+                {filteredAlerts.length}
+              </span>{" "}
+              de{" "}
+              <span className="font-semibold text-white">{alerts.length}</span>{" "}
+              alertas
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div>
+              <label className="mb-2 block text-sm text-slate-300">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
+              >
+                <option value="ALL">Todos</option>
+                <option value="OPEN">OPEN</option>
+                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                <option value="RESOLVED">RESOLVED</option>
+                <option value="FALSE_POSITIVE">FALSE_POSITIVE</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm text-slate-300">Severidade</label>
+              <select
+                value={severityFilter}
+                onChange={(e) => setSeverityFilter(e.target.value)}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
+              >
+                <option value="ALL">Todas</option>
+                <option value="CRITICAL">CRITICAL</option>
+                <option value="HIGH">HIGH</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="LOW">LOW</option>
+              </select>
+            </div>
+
+            <div className="flex items-end">
+              <button
+                onClick={clearFilters}
+                className="w-full rounded-xl border border-slate-700 px-4 py-3 text-sm text-white transition hover:bg-slate-950"
+              >
+                Limpar filtros
+              </button>
+            </div>
+          </div>
+        </section>
+
         {loading ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-slate-300">
             Carregando alertas...
           </div>
-        ) : alerts.length === 0 ? (
+        ) : filteredAlerts.length === 0 ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-slate-300">
-            Nenhum alerta encontrado.
+            Nenhum alerta encontrado para os filtros selecionados.
           </div>
         ) : (
           <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
@@ -145,7 +232,7 @@ export default function AlertsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {alerts.map((item) => {
+                  {filteredAlerts.map((item) => {
                     const isUpdating = updatingAlertId === item.id;
 
                     return (

@@ -39,9 +39,15 @@ export type RecentEvent = {
   source_port?: number | null;
   destination_port?: number | null;
   protocol: string;
-  dns_query?: string | null;
+  transport_layer?: string | null;
+  packet_size?: number | null;
   tcp_flags?: string | null;
+  dns_query?: string | null;
+  icmp_type?: number | null;
+  icmp_code?: number | null;
   event_timestamp: string;
+  raw_summary?: string | null;
+  collector_name?: string | null;
 };
 
 export type RecentAlert = {
