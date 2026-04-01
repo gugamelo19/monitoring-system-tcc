@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -13,6 +14,7 @@ import {
   RecentAlert,
 } from "@/types/dashboard";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
+import { AssetStatusOverview } from "@/components/dashboard/asset-status-overview";
 import { ProtocolsChart } from "@/components/dashboard/protocols-chart";
 import { SeverityChart } from "@/components/dashboard/severity-chart";
 import { RecentEventsTable } from "@/components/dashboard/recent-events-table";
@@ -61,7 +63,7 @@ export default function DashboardPage() {
         console.error("Erro ao carregar dashboard:", error);
         clearAuthTokens();
         router.push("/login");
-        } finally {
+      } finally {
         setLoading(false);
       }
     }
@@ -88,7 +90,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-slate-950 p-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex items-center justify-between">
+        <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white">InfraGuard Dashboard</h1>
             <p className="text-sm text-slate-400">
@@ -96,18 +98,41 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <button
-            onClick={() => {
-              clearAuthTokens();
-              router.push("/login");
-            }}
-            className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-white"
-          >
-            Sair
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/alerts"
+              className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-white transition hover:bg-slate-900"
+            >
+              Ver alertas
+            </Link>
+
+            <button
+              onClick={() => {
+                clearAuthTokens();
+                router.push("/login");
+              }}
+              className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-white transition hover:bg-slate-900"
+            >
+              Sair
+            </button>
+          </div>
         </header>
 
         <SummaryCards summary={summary} />
+
+        <AssetStatusOverview
+          total={summary.assets.total}
+          online={summary.assets.online}
+          offline={summary.assets.offline}
+          unstable={summary.assets.unstable}
+          unknown={summary.assets.unknown}
+        />
+
+        {summary.assets.offline > 0 ? (
+          <div className="rounded-2xl border border-red-900 bg-red-500/10 p-4 text-red-300">
+            Atenção: existem {summary.assets.offline} ativo(s) offline no momento.
+          </div>
+        ) : null}
 
         <div className="grid gap-6 xl:grid-cols-2">
           <ProtocolsChart data={protocols} />
