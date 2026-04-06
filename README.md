@@ -1,55 +1,155 @@
-# monitoring-system-tcc
+## Sistema Inteligente de Monitoramento de Infraestrutura de TI
 
-Sistema Inteligente de Monitoramento de Infraestrutura de TI com Detecção de Anomalias de Protocolo para Identificação de Ameaças.
+Projeto desenvolvido como Trabalho de Conclusão de Curso (TCC) com o objetivo de monitorar ativos de rede, coletar eventos, detectar anomalias de protocolo e gerar alertas para identificação de possíveis ameaças.
 
-## Objetivo
+---
 
-Desenvolver um protótipo acadêmico capaz de monitorar ativos de infraestrutura, registrar eventos de rede e identificar comportamentos anômalos em protocolos ICMP, TCP e DNS.
+## Visão Geral
 
-## Tecnologias
+O sistema realiza:
 
-- Python
+- Monitoramento contínuo de ativos de TI
+- Coleta de eventos de rede (TCP, ICMP, DNS)
+- Detecção de comportamentos anômalos
+- Geração e gerenciamento de alertas
+- Visualização em dashboard interativo
+
+---
+
+## Arquitetura do Sistema
+
+```bash
+[ Coletor / Simulador ]
+           ↓
+[ API Backend - Django ]
+           ↓
+[ Banco de Dados - PostgreSQL ]
+           ↓
+[ Dashboard - Next.js ]
+```
+
+## Tecnologias Utilizadas
+
+BACKEND
+
+- Python 
 - Django
-- Django REST Framework
-- PostgreSQL
+- Django REST Framework 
+- Postgres
+
+FRONTEND
 - Next.js
-- TypeScript
+- React
+- Typescript
 - Tailwind CSS
 
-## Estrutura
-
-- backend
-- frontend
-- collector
-- docs
+OUTROS 
+- JWT (Autenticação)
+- Git e GitHub
+- Simulador de eventos de rede
 
 ## Funcionalidades
 
-- Cadastro de ativos
-- Recebimento de eventos de rede
-- Detecção de anomalias
-- Geração de alertas
-- Dashboard de monitoramento
+DASHBOARD
+- Visão geral dos ativos
+- Indicadores de status (online/offline)
+- Gráficos de protocolos e severidade
 
-## Protocolos monitorados
+ALERTAS
+- Listagem de alertas
+- Classificação por severidade
+- Atualização de status:
+- OPEN
+- IN_PROGRESS
+- RESOLVED
+- FALSE_POSITIVE
+- Filtros por status e severidade
 
-- ICMP
+EVENTOS DE REDE
+- Visualização detalhada de eventos
+- Protocolos suportados:
 - TCP
+- ICMP
 - DNS
+- Filtros por protocolo
 
-## Como executar
+ATIVOS
+- Inventário de ativos monitorados
+- Status operacional
+- Tipo e localização
+- Filtro por status e tipo
 
-### Backend
+## Estrutura do projeto
 
+backend/
+  ├── apps/
+  │   ├── accounts/
+  │   ├── assets/
+  │   ├── events/
+  │   ├── alerts/
+  │   └── dashboard/
+  └── manage.py
+
+frontend/
+  ├── src/
+  │   ├── app/
+  │   ├── components/
+  │   ├── lib/
+  │   └── types/
+
+collector/
+  └── simulador de eventos
+
+## Como executar o projeto
+
+## BACKEND
+- Acessar pasta
 cd backend
+
+- Criar ambiente virtual 
+python -m venv venv
+
+- Ativar ambiente 
+venv\Scripts\activate  - Windows
+source venv/bin/activate - Linux/Mac
+
+- Instalar Dependências
+pip install -r requirements.txt
+
+- Rodar migrações
+python manage.py migrate
+
+- Criar superusuário
+python manage.py createsuperuser
+
+- Rodar servidor
 python manage.py runserver
 
-### Frontend
 
+## FRONTEND
+- Acessar pasta
 cd frontend
+
+- Rodar servidor
 npm run dev
 
-### Collector
 
-cd collector
+## COLLECTOR
+- Acessar pasta
+cd collector 
+
+- Instalar dependências
+npm install
+
+- Rodar servidor 
 python main.py
+
+
+
+## Objetivo do Projeto
+
+Este projeto tem como objetivo demonstrar a viabilidade de um sistema inteligente capaz de:
+	•	Monitorar infraestrutura de TI em tempo real
+	•	Identificar padrões anômalos de tráfego
+	•	Auxiliar na detecção de ameaças
+	•	Fornecer suporte à tomada de decisão operacional

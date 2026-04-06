@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -92,7 +91,14 @@ export default function AssetsPage() {
             </p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/dashboard/assets/new"
+              className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-white transition hover:bg-slate-900"
+            >
+              Novo ativo
+            </Link>
+
             <Link
               href="/dashboard"
               className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-white transition hover:bg-slate-900"
@@ -193,6 +199,7 @@ export default function AssetsPage() {
                     <th className="px-4 py-4">Sistema</th>
                     <th className="px-4 py-4">Status</th>
                     <th className="px-4 py-4">Monitorado</th>
+                    <th className="px-4 py-4">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -218,6 +225,14 @@ export default function AssetsPage() {
                           {asset.is_monitored ? "SIM" : "NÃO"}
                         </span>
                       </td>
+                      <td className="px-4 py-4">
+                        <Link
+                          href={`/dashboard/assets/${asset.id}/edit`}
+                          className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-white transition hover:bg-slate-950"
+                        >
+                          Editar
+                        </Link>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -228,4 +243,4 @@ export default function AssetsPage() {
       </div>
     </main>
   );
-}    
+}

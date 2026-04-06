@@ -48,3 +48,26 @@ export async function updateAlertStatus(
     body: JSON.stringify({ status }),
   });
 }
+
+export async function createAsset(
+  payload: Record<string, unknown>,
+  token: string,
+) {
+  return apiFetch("/api/assets/", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateAsset(
+  assetId: string,
+  payload: Record<string, unknown>,
+  token: string,
+) {
+  return apiFetch(`/api/assets/${assetId}/`, {
+    method: "PUT",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
