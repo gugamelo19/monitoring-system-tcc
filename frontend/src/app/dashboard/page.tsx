@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { apiFetch } from "@/lib/api";
@@ -29,47 +29,55 @@ export default function DashboardPage() {
   const [events, setEvents] = useState<RecentEvent[]>([]);
   const [alerts, setAlerts] = useState<RecentAlert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  useEffect(() => {
-    async function fetchDashboardData() {
-      const token = getAccessToken();
+  const fetchDashboardData = useCallback(async () => {
+    const token = getAccessToken();
 
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      try {
-        const [
-          summaryData,
-          protocolsData,
-          severityData,
-          eventsData,
-          alertsData,
-        ] = await Promise.all([
-          apiFetch<DashboardSummary>("/api/dashboard/summary/", { token }),
-          apiFetch<ProtocolItem[]>("/api/dashboard/protocols/", { token }),
-          apiFetch<SeverityItem[]>("/api/dashboard/severity/", { token }),
-          apiFetch<RecentEvent[]>("/api/dashboard/recent-events/?limit=10", { token }),
-          apiFetch<RecentAlert[]>("/api/dashboard/recent-alerts/?limit=10", { token }),
-        ]);
-
-        setSummary(summaryData);
-        setProtocols(protocolsData);
-        setSeverity(severityData);
-        setEvents(eventsData);
-        setAlerts(alertsData);
-      } catch (error) {
-        console.error("Erro ao carregar dashboard:", error);
-        clearAuthTokens();
-        router.push("/login");
-      } finally {
-        setLoading(false);
-      }
+    if (!token) {
+      router.push("/login");
+      return;
     }
 
-    fetchDashboardData();
+    try {
+      const [
+        summaryData,
+        protocolsData,
+        severityData,
+        eventsData,
+        alertsData,
+      ] = await Promise.all([
+        apiFetch<DashboardSummary>("/api/dashboard/summary/", { token }),
+        apiFetch<ProtocolItem[]>("/api/dashboard/protocols/", { token }),
+        apiFetch<SeverityItem[]>("/api/dashboard/severity/", { token }),
+        apiFetch<RecentEvent[]>("/api/dashboard/recent-events/?limit=10", { token }),
+        apiFetch<RecentAlert[]>("/api/dashboard/recent-alerts/?limit=10", { token }),
+      ]);
+
+      setSummary(summaryData);
+      setProtocols(protocolsData);
+      setSeverity(severityData);
+      setEvents(eventsData);
+      setAlerts(alertsData);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error("Erro ao carregar dashboard:", error);
+      clearAuthTokens();
+      router.push("/login");
+    } finally {
+      setLoading(false);
+    }
   }, [router]);
+
+  useEffect(() => {
+    fetchDashboardData();
+
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [fetchDashboardData]);
 
   if (loading) {
     return (
@@ -96,6 +104,11 @@ export default function DashboardPage() {
             <p className="text-sm text-slate-400">
               Monitoramento inteligente de infraestrutura de TI
             </p>
+            {lastUpdated ? (
+              <p className="mt-1 text-xs text-slate-500">
+                Última atualização: {lastUpdated.toLocaleTimeString("pt-BR")}
+              </p>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -105,7 +118,7 @@ export default function DashboardPage() {
             >
               Ver ativos
             </Link>
-            
+
             <Link
               href="/dashboard/events"
               className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-white transition hover:bg-slate-900"

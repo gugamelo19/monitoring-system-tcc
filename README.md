@@ -153,3 +153,18 @@ Este projeto tem como objetivo demonstrar a viabilidade de um sistema inteligent
 	•	Identificar padrões anômalos de tráfego
 	•	Auxiliar na detecção de ameaças
 	•	Fornecer suporte à tomada de decisão operacional
+
+
+## Prints do Sistema
+
+### Dashboard
+![Dashboard] (docs/dashboard.png)
+
+### Alertas
+![Alertas] (docs/alerts.png)
+
+### Eventos
+![Eventos] (docs/events.png)
+
+### Ativos
+![Ativos] (docs/assets.png)
