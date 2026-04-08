@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -45,9 +44,9 @@ export default function AlertsPage() {
   const [alerts, setAlerts] = useState<RecentAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingAlertId, setUpdatingAlertId] = useState<string | null>(null);
-
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [severityFilter, setSeverityFilter] = useState("ALL");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetchAlerts = useCallback(async () => {
     const token = getAccessToken();
@@ -60,6 +59,7 @@ export default function AlertsPage() {
     try {
       const data = await apiFetch<RecentAlert[]>("/api/alerts/", { token });
       setAlerts(data);
+      setLastUpdated(new Date());
     } catch (error) {
       console.error("Erro ao carregar alertas:", error);
       clearAuthTokens();
@@ -71,6 +71,12 @@ export default function AlertsPage() {
 
   useEffect(() => {
     fetchAlerts();
+
+    const interval = setInterval(() => {
+      fetchAlerts();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [fetchAlerts]);
 
   async function handleUpdateStatus(alertId: string, status: string) {
@@ -84,12 +90,7 @@ export default function AlertsPage() {
     try {
       setUpdatingAlertId(alertId);
       await updateAlertStatus(alertId, status, token);
-
-      setAlerts((currentAlerts) =>
-        currentAlerts.map((alert) =>
-          alert.id === alertId ? { ...alert, status } : alert
-        )
-      );
+      await fetchAlerts();
     } catch (error) {
       console.error("Erro ao atualizar status do alerta:", error);
       window.alert("Não foi possível atualizar o status do alerta.");
@@ -124,6 +125,11 @@ export default function AlertsPage() {
             <p className="text-sm text-slate-400">
               Monitoramento e acompanhamento dos alertas gerados pelo sistema
             </p>
+            {lastUpdated ? (
+              <p className="mt-1 text-xs text-slate-500">
+                Última atualização: {lastUpdated.toLocaleTimeString("pt-BR")}
+              </p>
+            ) : null}
           </div>
 
           <div className="flex gap-3">
@@ -160,8 +166,7 @@ export default function AlertsPage() {
               <span className="font-semibold text-white">
                 {filteredAlerts.length}
               </span>{" "}
-              de{" "}
-              <span className="font-semibold text-white">{alerts.length}</span>{" "}
+              de <span className="font-semibold text-white">{alerts.length}</span>{" "}
               alertas
             </div>
           </div>
@@ -248,17 +253,13 @@ export default function AlertsPage() {
                         <td className="px-4 py-4">{item.anomaly_type}</td>
 
                         <td className="px-4 py-4">
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getSeverityBadge(item.severity)}`}
-                          >
+                          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getSeverityBadge(item.severity)}`}>
                             {item.severity}
                           </span>
                         </td>
 
                         <td className="px-4 py-4">
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getStatusBadge(item.status)}`}
-                          >
+                          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getStatusBadge(item.status)}`}>
                             {item.status}
                           </span>
                         </td>

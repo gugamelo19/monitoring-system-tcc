@@ -27,6 +27,7 @@ export default function EventsPage() {
   const [events, setEvents] = useState<RecentEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [protocolFilter, setProtocolFilter] = useState("ALL");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetchEvents = useCallback(async () => {
     const token = getAccessToken();
@@ -39,6 +40,7 @@ export default function EventsPage() {
     try {
       const data = await apiFetch<RecentEvent[]>("/api/events/", { token });
       setEvents(data);
+      setLastUpdated(new Date());
     } catch (error) {
       console.error("Erro ao carregar eventos:", error);
       clearAuthTokens();
@@ -50,6 +52,12 @@ export default function EventsPage() {
 
   useEffect(() => {
     fetchEvents();
+
+    const interval = setInterval(() => {
+      fetchEvents();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [fetchEvents]);
 
   const filteredEvents = useMemo(() => {
@@ -88,6 +96,11 @@ export default function EventsPage() {
             <p className="text-sm text-slate-400">
               Visualização detalhada dos eventos coletados pelo sistema
             </p>
+            {lastUpdated ? (
+              <p className="mt-1 text-xs text-slate-500">
+                Última atualização: {lastUpdated.toLocaleTimeString("pt-BR")}
+              </p>
+            ) : null}
           </div>
 
           <div className="flex gap-3">
@@ -189,9 +202,7 @@ export default function EventsPage() {
                       </td>
 
                       <td className="px-4 py-4">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getProtocolBadge(event.protocol)}`}
-                        >
+                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getProtocolBadge(event.protocol)}`}>
                           {event.protocol}
                         </span>
                       </td>
