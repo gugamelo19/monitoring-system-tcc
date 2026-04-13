@@ -1,22 +1,21 @@
-from auth import get_access_token
 from services.api_client import APIClient
 from simulator import EventSimulator
 
 
 def main():
+    base_url = "http://127.0.0.1:8000"
+    username = "admin"
+    password = "admin"
+
     print("[INFO] Autenticando no backend...")
-    token = get_access_token()
-    print("[INFO] Token obtido com sucesso.")
 
-    api_client = APIClient(token)
+    api_client = APIClient(base_url, username, password)
+    api_client.authenticate()
+
+    print("[INFO] Iniciando simulador...")
+
     simulator = EventSimulator(api_client)
-
-    simulator.send_normal_traffic(total=15)
-    simulator.simulate_icmp_burst()
-    simulator.simulate_port_scan()
-    simulator.simulate_dns_burst()
-
-    print("\n[INFO] Simulação concluída com sucesso.")
+    simulator.run_realtime_monitoring(interval=5)
 
 
 if __name__ == "__main__":
