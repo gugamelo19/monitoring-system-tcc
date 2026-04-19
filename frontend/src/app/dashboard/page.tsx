@@ -100,7 +100,7 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">InfraGuard Dashboard</h1>
+            <h1 className="text-3xl font-bold text-white">Sistema Inteligente TCC</h1>
             <p className="text-sm text-slate-400">
               Monitoramento inteligente de infraestrutura de TI
             </p>
