@@ -1,5 +1,5 @@
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class EventFactory:
@@ -32,7 +32,7 @@ class EventFactory:
             "dns_query": "",
             "icmp_type": 8,
             "icmp_code": 0,
-            "event_timestamp": datetime.utcnow().isoformat(),
+            "event_timestamp": datetime.now(timezone.utc).isoformat(),
             "raw_summary": "ICMP echo request detected",
             "collector_name": "simulator",
         }
@@ -56,7 +56,7 @@ class EventFactory:
             "dns_query": "",
             "icmp_type": None,
             "icmp_code": None,
-            "event_timestamp": datetime.utcnow().isoformat(),
+            "event_timestamp": datetime.now(timezone.utc).isoformat(),
             "raw_summary": f"TCP connection attempt to port {destination_port}",
             "collector_name": "simulator",
         }
@@ -87,7 +87,7 @@ class EventFactory:
             "dns_query": random.choice(dns_queries),
             "icmp_type": None,
             "icmp_code": None,
-            "event_timestamp": datetime.utcnow().isoformat(),
+            "event_timestamp": datetime.now(timezone.utc).isoformat(),
             "raw_summary": "DNS query request detected",
             "collector_name": "simulator",
         }

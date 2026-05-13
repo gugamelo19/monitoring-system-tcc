@@ -82,7 +82,8 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS — em produção, restringir explicitamente aos domínios do frontend.
+CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=True, cast=bool)
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -91,10 +92,58 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    # NOTE: a paginação está desligada nesta versão para preservar a
+    # compatibilidade do frontend, que consome listas como arrays JSON.
+    # Para ativá-la em produção, adicionar:
+    #   "DEFAULT_PAGINATION_CLASS":
+    #       "rest_framework.pagination.PageNumberPagination",
+    #   "PAGE_SIZE": 50,
+    # e adaptar o frontend para ler "results" da resposta.
 }
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+
+# ============================================================
+# Configurações do motor de detecção de anomalias.
+#
+# Os limiares abaixo são lidos pelo AnomalyDetectorService e
+# podem ser sobrescritos via variáveis de ambiente, viabilizando
+# a análise de sensibilidade (variação paramétrica dos limiares)
+# sem necessidade de alterar código.
+# ============================================================
+
+DETECTOR_THRESHOLDS = {
+    # HIGH_ICMP_RATE: dispara quando há mais de N eventos ICMP do mesmo
+    # source_ip dentro de WINDOW_SECONDS.
+    "ICMP_RATE_COUNT": config("ICMP_RATE_COUNT", default=20, cast=int),
+    "ICMP_RATE_WINDOW_SECONDS": config(
+        "ICMP_RATE_WINDOW_SECONDS", default=30, cast=int),
+
+    # PORT_SCAN_SUSPECT: dispara quando há mais de N portas TCP destino
+    # distintas do mesmo source_ip dentro de WINDOW_SECONDS.
+    "PORT_SCAN_DISTINCT_PORTS": config(
+        "PORT_SCAN_DISTINCT_PORTS", default=10, cast=int),
+    "PORT_SCAN_WINDOW_SECONDS": config(
+        "PORT_SCAN_WINDOW_SECONDS", default=60, cast=int),
+
+    # DNS_QUERY_BURST: dispara quando há mais de N eventos DNS do mesmo
+    # source_ip dentro de WINDOW_SECONDS.
+    "DNS_BURST_COUNT": config("DNS_BURST_COUNT", default=30, cast=int),
+    "DNS_BURST_WINDOW_SECONDS": config(
+        "DNS_BURST_WINDOW_SECONDS", default=60, cast=int),
+
+    # Janela de deduplicação: anomalias do mesmo tipo, no mesmo asset,
+    # dentro deste intervalo são suprimidas como duplicatas.
+    "DEDUPLICATION_WINDOW_SECONDS": config(
+        "DEDUPLICATION_WINDOW_SECONDS", default=60, cast=int),
+
+    # Duração padrão (em horas) da supressão automática quando um alerta
+    # é marcado como FALSE_POSITIVE pelo operador.
+    "FALSE_POSITIVE_SUPPRESS_HOURS": config(
+        "FALSE_POSITIVE_SUPPRESS_HOURS", default=24, cast=int),
 }

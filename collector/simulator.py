@@ -2,11 +2,13 @@ import random
 import time
 
 from services.event_factory import EventFactory
+from services.network_tools import ExternalToolUnavailable, NetworkToolRunner
 
 
 class EventSimulator:
     def __init__(self, api_client):
         self.api_client = api_client
+        self.network_tools = NetworkToolRunner()
 
     @staticmethod
     def describe_event_response(response: dict) -> str:
@@ -95,11 +97,26 @@ class EventSimulator:
         asset = target_asset or random.choice(assets)
 
         print(
-            f"\n[INFO] Simulando burst ICMP com {total} eventos "
-            f"no ativo {asset['name']} ({asset['ip_address']})..."
+            f"\n[INFO] Executando flooding ICMP controlado com hping3 "
+            f"({total} pacotes) no ativo {asset['name']} ({asset['ip_address']})..."
         )
 
         attacker_ip = EventFactory.suspicious_source_ip()
+
+        try:
+            result = self.network_tools.run_hping3_icmp_flood(
+                target_ip=asset["ip_address"],
+                count=total,
+            )
+
+            if result.returncode == 0:
+                print("[HPING3] Flooding ICMP controlado executado com sucesso.")
+            else:
+                print("[WARN] hping3 retornou erro durante a execucao.")
+                if result.stderr:
+                    print(result.stderr.strip())
+        except (ExternalToolUnavailable, TimeoutError) as error:
+            print(f"[WARN] {error}")
 
         for index in range(total):
             payload = EventFactory.icmp_event(
@@ -107,6 +124,8 @@ class EventSimulator:
                 source_ip=attacker_ip,
                 destination_ip=asset["ip_address"],
             )
+            payload["collector_name"] = "hping3"
+            payload["raw_summary"] = "ICMP flood generated with hping3"
             response = self.api_client.send_event(payload)
             print(
                 f"[ICMP BURST] Evento {index + 1}/{total} enviado para "
@@ -123,13 +142,28 @@ class EventSimulator:
 
         asset = target_asset or random.choice(assets)
 
+        ports = [21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445, 3306]
+        attacker_ip = EventFactory.suspicious_source_ip()
+
         print(
-            f"\n[INFO] Simulando port scan TCP no ativo "
+            f"\n[INFO] Executando port scan com Nmap no ativo "
             f"{asset['name']} ({asset['ip_address']})..."
         )
 
-        ports = [21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445, 3306]
-        attacker_ip = EventFactory.suspicious_source_ip()
+        try:
+            result = self.network_tools.run_nmap_port_scan(
+                target_ip=asset["ip_address"],
+                ports=ports,
+            )
+
+            if result.returncode == 0:
+                print("[NMAP] Port scan executado com sucesso.")
+            else:
+                print("[WARN] Nmap retornou erro durante a execucao.")
+                if result.stderr:
+                    print(result.stderr.strip())
+        except (ExternalToolUnavailable, TimeoutError) as error:
+            print(f"[WARN] {error}")
 
         for index, port in enumerate(ports, start=1):
             payload = EventFactory.tcp_event(
@@ -138,6 +172,8 @@ class EventSimulator:
                 destination_ip=asset["ip_address"],
                 destination_port=port,
             )
+            payload["collector_name"] = "nmap"
+            payload["raw_summary"] = f"Nmap TCP scan attempt to port {port}"
             response = self.api_client.send_event(payload)
             print(
                 f"[PORT SCAN] Porta {port} ({index}/{len(ports)}) enviada para "
